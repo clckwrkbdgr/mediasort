@@ -304,11 +304,12 @@ def reencode_tags(tags):
 	encodings = []
 	for filename in tags:
 		taginfo = tags[filename]
-		encodings += [
-				chardet.detect(taginfo.artist)['encoding'],
-				chardet.detect(taginfo.album)['encoding'],
-				chardet.detect(taginfo.title)['encoding']
-				]
+		if type(taginfo.artist) is bytes:
+			encodings.append(chardet.detect(taginfo.artist)['encoding'])
+		if type(taginfo.album) is bytes:
+			encodings.append(chardet.detect(taginfo.album)['encoding'])
+		if type(taginfo.title) is bytes:
+			encodings.append(chardet.detect(taginfo.title)['encoding'])
 
 	non_ascii_encodings = filter(lambda x: x != "ascii", encodings)
 	if non_ascii_encodings:
