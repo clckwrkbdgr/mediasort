@@ -255,16 +255,21 @@ def repair_tags(tags, args):
 			print("Track number is not a number: {0}".format(taginfo.number))
 			taginfo.number = fs_taginfo.number
 
+		taginfo.title = taginfo.title.replace(args.SEPARATOR, ' ')
 		taginfo.title = taginfo.title.replace('_', ' ')
 		if taginfo.title.startswith(str(taginfo.number)):
 			taginfo.title = taginfo.title[len(str(taginfo.number)):].lstrip()
 
+		taginfo.album = taginfo.album.replace(args.SEPARATOR, ' ')
 		if 'CD 1' in taginfo.album:
 			taginfo.album = taginfo.album.replace(' - CD 1', '')
 			taginfo.number += 100
 		if 'CD 2' in taginfo.album:
 			taginfo.album = taginfo.album.replace(' - CD 2', '')
 			taginfo.number += 200
+
+		taginfo.artist = taginfo.artist.replace(args.SEPARATOR, ' ')
+		taginfo.artist = taginfo.artist.replace(args.SEPARATOR, ' ')
 
 		taginfo.title  = taginfo.title.strip()
 		taginfo.artist = taginfo.artist.strip()
@@ -289,6 +294,7 @@ def repair_tags(tags, args):
 		
 		taginfo.album = ''.join([word.capitalize() for word in re.split(r"([\w']+)", taginfo.album)])
 		taginfo.title = ''.join([word.capitalize() for word in re.split(r"([\w']+)", taginfo.title)])
+		taginfo.artist = ''.join([word.capitalize() for word in re.split(r"([\w']+)", taginfo.artist)])
 
 	most_frequent_year = get_most_frequent_value([tags[filename].year for filename in tags])
 	for filename in tags:
@@ -389,6 +395,7 @@ def main():
 	parser.add_argument("--force_album", dest="ALBUM", default="", required=False, help="Override tagged album title with this value")
 	parser.add_argument("--root_dir", dest="NEW_ROOT_DIR", default=".", required=True, help="Library root directory")
 	parser.add_argument("--use_subdirs", dest="USE_SUBDIRS", default=False, required=False, help="Is library directory contains all artist dirs in some subdirs (like by genre etc)?")
+	parser.add_argument("--separator", dest="SEPARATOR", default=" ", required=False, help="Separator to use instead of space")
 	args = parser.parse_args()
 
 	wd = args.wd
