@@ -306,7 +306,7 @@ def repair_tags(tags, args):
 
 	return tags
 
-def reencode_tags(tags):
+def guess_encoding(tags):
 	encodings = []
 	for filename in tags:
 		taginfo = tags[filename]
@@ -320,14 +320,22 @@ def reencode_tags(tags):
 	non_ascii_encodings = filter(lambda x: x != "ascii", encodings)
 	if non_ascii_encodings:
 		encodings = non_ascii_encodings
-	encoding = get_most_frequent_value(encodings)
-	if encoding:
-		print("Encoding detected: {0}".format(encoding))
+	return get_most_frequent_value(encodings)
+
+def reencode_tags(tags, args):
+	encoding = None
+	if args.ENCODING:
+		encoding = args.ENCODING
+		print("Using encoding: {0}".format(encoding))
+	else:
+		encoding = guess_encoding(tags)
+		if encoding:
+			print("Encoding detected: {0}".format(encoding))
+	if not encoding:
+		encoding = 'ascii'
 	
 	for filename in tags:
 		taginfo = tags[filename]
-		if not encoding:
-			encoding = 'ascii'
 		taginfo.artist = taginfo.artist.decode(encoding) if isinstance(taginfo.artist, bytes) else taginfo.artist
 		taginfo.album  = taginfo.album.decode(encoding) if isinstance(taginfo.album, bytes) else taginfo.album
 		taginfo.title  = taginfo.title.decode(encoding) if isinstance(taginfo.title, bytes) else taginfo.title
@@ -338,7 +346,7 @@ def get_all_data(wd, args):
 	mp3_filenames, other_filenames = get_dir_content(wd)
 	mp3_filenames = sorted(mp3_filenames)
 	tags = dict([(filename, get_taginfo_for_file(filename)) for filename in mp3_filenames])
-	tags = reencode_tags(tags)
+	tags = reencode_tags(tags, args)
 	tags = repair_tags(tags, args)
 	new_filenames = dict([(filename, get_new_filename(tags[filename], args.NEW_ROOT_DIR, args.USE_SUBDIRS)) for filename in mp3_filenames])
 
@@ -393,6 +401,7 @@ def main():
 	parser.add_argument("--force_fs_tags", dest="FORCE_FS_TAGS", action='store_true', default=False, help="Force filling MP3 tags from filenames instead of current ID3v2 tags")
 	parser.add_argument("--force_artist", dest="ARTIST", default="", required=False, help="Override tagged artist name with this value")
 	parser.add_argument("--force_album", dest="ALBUM", default="", required=False, help="Override tagged album title with this value")
+	parser.add_argument("--force_encoding", dest="ENCODING", default="", required=False, help="Use this encoding on all tracks' tags")
 	parser.add_argument("--root_dir", dest="NEW_ROOT_DIR", default=".", required=True, help="Library root directory")
 	parser.add_argument("--use_subdirs", dest="USE_SUBDIRS", default=False, required=False, help="Is library directory contains all artist dirs in some subdirs (like by genre etc)?")
 	parser.add_argument("--separator", dest="SEPARATOR", default=" ", required=False, help="Separator to use instead of space")
