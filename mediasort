@@ -202,6 +202,7 @@ def get_tags_from_filesystem(filepaths):
 				r'(?P<number>[0-9]+) ?- ?(?P<title>.+)',
 				r'(?P<number>[0-9]+)\.(?P<title>.+)',
 				r'(?P<number>[0-9]+)_(?P<title>.+)',
+				r'(?P<number>[0-9]+) (?P<title>.+)',
 				r'(?P<number>[0-9]+)(?P<title>.+)',
 				r'(?P<title>.+)'
 				]
@@ -234,6 +235,8 @@ def repair_tags(tags, args):
 			taginfo.album = args.ALBUM
 		if args.ARTIST:
 			taginfo.artist = args.ARTIST
+		if args.YEAR:
+			taginfo.year = args.YEAR
 		#print(taginfo.artist, taginfo.album, taginfo.year, taginfo.number, taginfo.title)
 
 		album_parts = _split_path(taginfo.album)
@@ -258,7 +261,8 @@ def repair_tags(tags, args):
 		taginfo.title = taginfo.title.replace(args.SEPARATOR, ' ')
 		taginfo.title = taginfo.title.replace('_', ' ')
 		if taginfo.title.startswith(str(taginfo.number)):
-			taginfo.title = taginfo.title[len(str(taginfo.number)):].lstrip()
+			if taginfo.title[len(str(taginfo.number))] in '-. _':
+				taginfo.title = taginfo.title[len(str(taginfo.number)):].lstrip()
 
 		taginfo.album = taginfo.album.replace(args.SEPARATOR, ' ')
 		if 'CD 1' in taginfo.album:
@@ -400,6 +404,7 @@ def main():
 	parser.add_argument("wd", default=os.getcwd(), help="Working directory (default to current)")
 	parser.add_argument("--force_fs_tags", dest="FORCE_FS_TAGS", action='store_true', default=False, help="Force filling MP3 tags from filenames instead of current ID3v2 tags")
 	parser.add_argument("--force_artist", dest="ARTIST", default="", required=False, help="Override tagged artist name with this value")
+	parser.add_argument("--force_year", dest="YEAR", default="", required=False, help="Override tagged year with this value")
 	parser.add_argument("--force_album", dest="ALBUM", default="", required=False, help="Override tagged album title with this value")
 	parser.add_argument("--force_encoding", dest="ENCODING", default="", required=False, help="Use this encoding on all tracks' tags")
 	parser.add_argument("--root_dir", dest="NEW_ROOT_DIR", default=".", required=True, help="Library root directory")
