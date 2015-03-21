@@ -42,13 +42,11 @@ class TrackInfo:
 			self.album = album
 			self.length = length
 			self.filename = filename
+	def __str__(self):
+		return "<{0}> / <{1}> / <{2}> : <{3}> <= {4}".format(self.artist, self.album, self.title, self.length, self.filename)
 
 def extract_tags_from_filename(filename):
-	info = TrackInfo()
-	info.title = os.path.splitext(os.path.basename(filename))[0]
-	m = re.match(r'[0-9]{,3} +[-]? +(.+)', info.title)
-	if m:
-		info.title = m.group(1)
+	info = TrackInfo(filename=filename)
 	return info
 
 def substitute_insufficient_info(original_info, extended_info):
@@ -62,16 +60,7 @@ def substitute_insufficient_info(original_info, extended_info):
 	return info
 
 def decode_info(original_info):
-	info = TrackInfo(original_info)
-	encoding = chardet.detect((info.artist + info.title).encode('latin1'))
-	try:
-		encoding = encoding["encoding"]
-		info.artist = info.artist.encode('latin1').decode(encoding)
-		info.album = info.album.encode('latin1').decode(encoding)
-		info.title = info.title.encode('latin1').decode(encoding)
-	except Exception as e:
-		print(info.filename, encoding, e)
-	return info
+	return original_info
 
 def convert_length(length):
 	if ":" not in length:
