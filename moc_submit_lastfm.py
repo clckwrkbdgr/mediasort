@@ -60,7 +60,14 @@ def substitute_insufficient_info(original_info, extended_info):
 	return info
 
 def decode_info(original_info):
-	return original_info
+	info = TrackInfo(original_info)
+	try:
+		info.artist = info.artist.encode('latin-1').decode('utf-8')
+		info.album = info.album.encode('latin-1').decode('utf-8')
+		info.title = info.title.encode('latin-1').decode('utf-8')
+	except Exception as e:
+		print("moc: {0}: ".format(info.filename), e)
+	return info
 
 def convert_length(length):
 	if ":" not in length:
