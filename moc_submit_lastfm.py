@@ -26,6 +26,7 @@ import re
 import chardet
 
 DEBUG = False
+DEBUG_NO_LOG = False
 
 class TrackInfo:
 	def __init__(self, artist=None, title=None, album=None, length=None, filename=None):
@@ -59,14 +60,38 @@ def substitute_insufficient_info(original_info, extended_info):
 		info.title = extended_info.title
 	return info
 
+def is_latin(ch):
+	try:
+		ch.encode('latin-1').decode('utf-8')
+	except Exception as e:
+		return False
+	return True
+
+def could_be_cp1251(tag):
+	latin, total = [is_latin(ch) for ch in tag].count(True), len(tag)
+	return latin / total < 0.65
+
+def decode_tag(tag):
+	bytes_tag = None
+	try:
+		bytes_tag = tag.encode('latin-1')
+	except:
+		return tag
+	try:
+		tag = bytes_tag.decode('utf-8')
+	except:
+		if could_be_cp1251(tag):
+			try:
+				tag = tag.encode('latin-1').decode('cp1251')
+			except Exception as e:
+				pass
+	return tag
+
 def decode_info(original_info):
 	info = TrackInfo(original_info)
-	try:
-		info.artist = info.artist.encode('latin-1').decode('utf-8')
-		info.album = info.album.encode('latin-1').decode('utf-8')
-		info.title = info.title.encode('latin-1').decode('utf-8')
-	except Exception as e:
-		print("moc: {0}: ".format(info.filename), e)
+	info.artist = decode_tag(info.artist)
+	info.album = decode_tag(info.album)
+	info.title = decode_tag(info.title)
 	return info
 
 def convert_length(length):
@@ -99,6 +124,8 @@ def submit_to_lastfm(info):
 		print("moc: {0}: ".format(info.filename), e)
 
 def wait_until_song_is_half_played(info):
+	if DEBUG:
+		return True
 	if info.length < 15:
 		return True
 	wait = info.length/2
@@ -126,6 +153,8 @@ def main():
 		exit(1)
 
 	original_info = TrackInfo(options)
+	if DEBUG:
+		print(original_info)
 	original_info.length = convert_length(original_info.length)
 	filename_info = extract_tags_from_filename(original_info.filename)
 	original_info = substitute_insufficient_info(original_info, filename_info)
@@ -141,7 +170,7 @@ if __name__ == '__main__':
 		del sys.argv[1]
 		unittest.main()
 
-	if not DEBUG:
+	if not DEBUG_NO_LOG:
 		home = os.path.expanduser("~")
 		logfile = open(os.path.join(home, ".util.log"), "a")
 		sys.stdout = logfile
