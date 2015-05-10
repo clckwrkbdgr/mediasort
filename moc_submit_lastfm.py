@@ -46,17 +46,48 @@ class TrackInfo:
 	def __str__(self):
 		return "<{0}> / <{1}> / <{2}> : <{3}> <= {4}".format(self.artist, self.album, self.title, self.length, self.filename)
 
+def split_path(filename):
+	path = []
+	while 1:
+		filename, element = os.path.split(filename)
+
+		if element:
+			path.append(element)
+		else:
+			if filename:
+				path.append(filename)
+			break
+	path.reverse()
+	return path
+
 def extract_tags_from_filename(filename):
 	info = TrackInfo(filename=filename)
+	path = split_path(filename)
+	if len(path) >= 3:
+		info.artist, info.album, info.title = path[-3:]
+
+		if info.artist.endswith(' Discography'):
+			info.artist = info.artist.replace(' Discography', '')
+
+		m = re.match('\(?[0-9]+\)? +(.*)', info.album)
+		if m:
+			info.album = m.group(1)
+		if info.album.endswith(' (Mixed)'):
+			info.album = info.album.replace(' (Mixed)', '')
+
+		m = re.match('[0-9]+ +(.*)\.(ogg|mp3)', info.title)
+		if m:
+			info.title = m.group(1)
+
 	return info
 
 def substitute_insufficient_info(original_info, extended_info):
 	info = TrackInfo(original_info)
-	if info.artist is None and extended_info.artist is not None:
+	if not info.artist and extended_info.artist:
 		info.artist = extended_info.artist
-	if info.album is None and extended_info.album is not None:
+	if not info.album and extended_info.album:
 		info.album = extended_info.album
-	if info.title is None and extended_info.title is not None:
+	if not info.title and extended_info.title:
 		info.title = extended_info.title
 	return info
 
@@ -113,6 +144,9 @@ def still_playing(info):
 
 def submit_to_lastfm(info):
 	args = ["/usr/lib/lastfmsubmitd/lastfmsubmit", "--artist", info.artist, "--title", info.title, "--length", str(info.length)]
+	if not info.artist or not info.title:
+		print("moc: {0}: no artist or title present".format(info.filename))
+		return
 	if info.album is not None:
 		args.extend(["--album", info.album])
 	if DEBUG:
@@ -147,7 +181,8 @@ def main():
 	parser.add_option("-l", "--length", dest="length")
 	parser.add_option("-f", "--filename", dest="filename")
 	options, args = parser.parse_args()
-	mandatory = ["artist", "title", "length", "filename"]
+	mandatory = ["filename"]
+	#if any(not options.__dict__.get(k) for k in mandatory):
 	if any(not options.__dict__.get(k) for k in mandatory):
 		print("moc: {0}: All of {1} must be specified".format(options.filename, ', '.join(mandatory)))
 		exit(1)

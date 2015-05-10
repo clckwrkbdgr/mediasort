@@ -15,6 +15,27 @@ class TestExtractInfo(unittest.TestCase):
 		info = MOC.substitute_insufficient_info(info, extended)
 		self.check_info("artist", None, "extended_title", info)
 
+class TestExtractInfoFromFilename(unittest.TestCase):
+	def check_info(self, artist, album, title, info):
+		if isinstance(info, str):
+			info = MOC.extract_tags_from_filename(info)
+		self.assertEqual(info.artist, artist)
+		self.assertEqual(info.album, album)
+		self.assertEqual(info.title, title)
+
+	def test_should_extract_info_from_filename(self):
+		info = MOC.TrackInfo(filename="/x/music/Rosetta/2005 The Galilean Satellites (Mixed)/01 Depart & Deneb.ogg")
+		file_info = MOC.extract_tags_from_filename(info.filename)
+		self.check_info("Rosetta", "The Galilean Satellites", "Depart & Deneb", file_info)
+
+		info = MOC.TrackInfo(filename="/x/music/Within Temptation Discography/(2007) The Heart of Everything/01 The Howling.mp3")
+		file_info = MOC.extract_tags_from_filename(info.filename)
+		self.check_info("Within Temptation", "The Heart of Everything", "The Howling", file_info)
+
+		info = MOC.TrackInfo(filename="/x/music/Within Temptation Discography/(2007) The Heart of Everything/02 What Have You Done (feat. Keith Caputo).mp3")
+		file_info = MOC.extract_tags_from_filename(info.filename)
+		self.check_info("Within Temptation", "The Heart of Everything", "What Have You Done (feat. Keith Caputo)", file_info)
+
 class TestDecodeInfo(unittest.TestCase):
 	def check_info(self, artist, album, title, info):
 		if isinstance(info, str):
