@@ -126,6 +126,8 @@ def decode_info(original_info):
 	return info
 
 def convert_length(length):
+	if not length:
+		return 0
 	if ":" not in length:
 		return int(length)
 	mins, secs = length.split(":")
@@ -160,6 +162,8 @@ def submit_to_lastfm(info):
 def wait_until_song_is_half_played(info):
 	if DEBUG:
 		return True
+	if info.length < 1:
+		return False
 	if info.length < 15:
 		return True
 	wait = info.length/2
