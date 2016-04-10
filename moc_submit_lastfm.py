@@ -136,7 +136,7 @@ def convert_length(length):
 # Side-effect functions
 
 def still_playing(info):
-	p = subprocess.Popen(["mocp", "-i"], stdout=subprocess.PIPE)
+	p = subprocess.Popen(["bash", "-ic", "mocp -i"], stdout=subprocess.PIPE)
 	out, err = p.communicate()
 	lines = out.decode('utf-8').split("\n")
 	for s in ["Artist: %s" % info.artist, "Album: %s" % info.album, "SongTitle: %s" % info.title]:
