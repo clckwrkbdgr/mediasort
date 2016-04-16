@@ -25,8 +25,15 @@ import os
 import re
 import chardet
 
-DEBUG = False
-DEBUG_NO_LOG = False
+def log(*args):
+	data_dir = os.environ.get('XDG_DATA_HOME')
+	if not data_dir:
+		data_dir = os.path.join(os.path.expanduser("~"), ".local", "share")
+	logdir = os.path.join(data_dir, "mediasort")
+	os.makedirs(logdir, exist_ok=True)
+	with open(os.path.join(logdir, "moc_submit_lastfm.log"), "a") as logfile:
+		isonow = datetime.datetime.now().isoformat(' ')
+		logfile.write("{0}:{1}\n".format(isonow, ' '.join([str(arg) for arg in args])))
 
 class TrackInfo:
 	def __init__(self, artist=None, title=None, album=None, length=None, filename=None):
@@ -147,21 +154,16 @@ def still_playing(info):
 def submit_to_lastfm(info):
 	args = ["/usr/lib/lastfmsubmitd/lastfmsubmit", "--artist", info.artist, "--title", info.title, "--length", str(info.length)]
 	if not info.artist or not info.title:
-		print("moc: {0}: no artist or title present".format(info.filename))
+		log("{0}: no artist or title present".format(info.filename))
 		return
 	if info.album is not None:
 		args.extend(["--album", info.album])
-	if DEBUG:
-		print(args)
-		return
 	try:
 		subprocess.check_call(args)
 	except Exception as e:
-		print("moc: {0}: ".format(info.filename), e)
+		log("{0}: ".format(info.filename), e)
 
 def wait_until_song_is_half_played(info):
-	if DEBUG:
-		return True
 	if info.length < 1:
 		return False
 	if info.length < 15:
@@ -171,8 +173,6 @@ def wait_until_song_is_half_played(info):
 	while True:
 		time.sleep(5)
 		if not still_playing(info):
-			if DEBUG:
-				print("not playing")
 			return False
 		if (datetime.datetime.now() - start).seconds > wait:
 			return True
@@ -186,14 +186,11 @@ def main():
 	parser.add_option("-f", "--filename", dest="filename")
 	options, args = parser.parse_args()
 	mandatory = ["filename"]
-	#if any(not options.__dict__.get(k) for k in mandatory):
 	if any(not options.__dict__.get(k) for k in mandatory):
-		print("moc: {0}: All of {1} must be specified".format(options.filename, ', '.join(mandatory)))
+		log("{0}: All of {1} must be specified".format(options.filename, ', '.join(mandatory)))
 		exit(1)
 
 	original_info = TrackInfo(options)
-	if DEBUG:
-		print(original_info)
 	original_info.length = convert_length(original_info.length)
 	filename_info = extract_tags_from_filename(original_info.filename)
 	original_info = substitute_insufficient_info(original_info, filename_info)
@@ -209,12 +206,7 @@ if __name__ == '__main__':
 		del sys.argv[1]
 		unittest.main()
 
-	if not DEBUG_NO_LOG:
-		home = os.path.expanduser("~")
-		logfile = open(os.path.join(home, ".util.log"), "a")
-		sys.stdout = logfile
-		sys.stderr = logfile
 	try:
 		main()
 	except Exception as e:
-		print(sys.argv, e)
+		log(sys.argv, e)
