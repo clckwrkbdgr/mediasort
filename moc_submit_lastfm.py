@@ -35,6 +35,15 @@ def log(*args):
 		isonow = datetime.datetime.now().isoformat(' ')
 		logfile.write("{0}:{1}\n".format(isonow, ' '.join([str(arg) for arg in args])))
 
+def get_moc_config_dir():
+	config_dir = os.environ.get('XDG_CONFIG_HOME')
+	if not config_dir:
+		config_dir = os.path.join(os.path.expanduser("~"), ".config")
+	moc_config_dir = os.path.join(config_dir, "moc")
+	if not os.path.isdir(moc_config_dir):
+		moc_config_dir = os.path.join(os.path.expanduser("~"), ".moc")
+	return moc_config_dir
+
 class TrackInfo:
 	def __init__(self, artist=None, title=None, album=None, length=None, filename=None):
 		other = artist
@@ -189,6 +198,22 @@ def main():
 	if any(not options.__dict__.get(k) for k in mandatory):
 		log("{0}: All of {1} must be specified".format(options.filename, ', '.join(mandatory)))
 		exit(1)
+
+	moc_config_dir = get_moc_config_dir()
+	if moc_config_dir:
+		index = -1
+		playlist = os.path.join(moc_config_dir, "playlist.m3u")
+		if os.path.isfile(playlist):
+			with open(playlist, "r") as f:
+				for line in f:
+					if line.startswith('#'):
+						continue
+					index += 1
+					if options.filename in line:
+						break
+		with open(os.path.join(moc_config_dir, "last_track"), "w") as f:
+			f.write(options.filename + "\n")
+			f.write(str(index) + "\n")
 
 	original_info = TrackInfo(options)
 	original_info.length = convert_length(original_info.length)
