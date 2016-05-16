@@ -44,6 +44,15 @@ def get_moc_config_dir():
 		moc_config_dir = os.path.join(os.path.expanduser("~"), ".moc")
 	return moc_config_dir
 
+def get_moc_data_dir():
+	data_dir = os.environ.get('XDG_DATA_HOME')
+	if not data_dir:
+		data_dir = os.path.join(os.path.expanduser("~"), ".local", "share")
+	moc_data_dir = os.path.join(data_dir, "moc")
+	if not os.path.isdir(moc_data_dir):
+		moc_data_dir = os.path.join(os.path.expanduser("~"), ".moc")
+	return moc_data_dir
+
 class TrackInfo:
 	def __init__(self, artist=None, title=None, album=None, length=None, filename=None):
 		other = artist
@@ -200,9 +209,12 @@ def main():
 		exit(1)
 
 	moc_config_dir = get_moc_config_dir()
+	moc_data_dir = get_moc_data_dir()
 	if moc_config_dir:
 		index = -1
 		playlist = os.path.join(moc_config_dir, "playlist.m3u")
+		if not os.path.isfile(playlist) and moc_data_dir:
+			playlist = os.path.join(moc_data_dir, "playlist.m3u")
 		if os.path.isfile(playlist):
 			with open(playlist, "r") as f:
 				for line in f:
@@ -211,7 +223,8 @@ def main():
 					index += 1
 					if options.filename in line:
 						break
-		with open(os.path.join(moc_config_dir, "last_track"), "w") as f:
+		os.makedirs(moc_data_dir, exist_ok=True)
+		with open(os.path.join(moc_data_dir, "last_track"), "w") as f:
 			f.write(options.filename + "\n")
 			f.write(str(index) + "\n")
 
