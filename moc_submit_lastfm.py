@@ -45,6 +45,20 @@ def get_moc_config_dir():
 	return moc_config_dir
 
 def get_moc_data_dir():
+	moc_config_file = os.path.join(get_moc_config_dir(), "config")
+	if os.path.isfile(moc_config_file):
+		with open(moc_config_file, 'r') as f:
+			for line in f:
+				line = line.strip()
+				if line.startswith('MOCDir') and '=' in line:
+					moc_dir = line.split('=')[1].strip()
+					if '${' in moc_dir:
+						envvars = re.findall(r'\$\{([^}]+)\}', moc_dir)
+						for var in envvars:
+							moc_dir = moc_dir.replace('${' + var + '}', os.getenv(var))
+					if os.path.isdir(moc_dir):
+						os.makedirs(moc_dir, exist_ok=True)
+						return moc_dir
 	data_dir = os.environ.get('XDG_DATA_HOME')
 	if not data_dir:
 		data_dir = os.path.join(os.path.expanduser("~"), ".local", "share")
