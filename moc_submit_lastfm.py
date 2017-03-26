@@ -26,7 +26,7 @@ import re
 import chardet
 
 def log(*args):
-	data_dir = os.environ.get('XDG_DATA_HOME')
+	data_dir = os.environ.get('XDG_LOG_HOME')
 	if not data_dir:
 		data_dir = os.path.join(os.path.expanduser("~"), ".local", "share")
 	logdir = os.path.join(data_dir, "mediasort")
