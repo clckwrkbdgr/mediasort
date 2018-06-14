@@ -178,8 +178,12 @@ def still_playing(info):
 	p = subprocess.Popen(["bash", "-ic", "mocp -i"], stdout=subprocess.PIPE)
 	out, err = p.communicate()
 	lines = out.decode('utf-8').split("\n")
+	if 'File: {0}'.format(info.filename) in lines:
+		return True
+	log('Cannot find filename "{0}" in moc info output'.format(info.filename))
 	for s in ["Artist: %s" % info.artist, "Album: %s" % info.album, "SongTitle: %s" % info.title]:
 		if not s in lines:
+			log(info.filename, ': <{0}> not in lines'.format(s))
 			return False
 	return True
 
