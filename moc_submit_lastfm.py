@@ -188,7 +188,16 @@ def still_playing(info):
 	return True
 
 def submit_to_lastfm(info):
-	args = ["/usr/lib/lastfmsubmitd/lastfmsubmit", "--artist", info.artist, "--title", info.title, "--length", str(info.length)]
+	lastfmsubmit = [
+			"/usr/local/lib/lastfmsubmitd/lastfmsubmit",
+			"/usr/lib/lastfmsubmitd/lastfmsubmit",
+			]
+	lastfmsubmit = [filename for filename in lastfmsubmit if os.path.exists(filename)]
+	if not lastfmsubmit:
+		log("{0}: failed to find any lastfmsubmitd runner, exiting".format(info.filename))
+		return
+	lastfmsubmit = lastfmsubmit[0]
+	args = [lastfmsubmit, "--artist", info.artist, "--title", info.title, "--length", str(info.length)]
 	if not info.artist or not info.title:
 		log("{0}: no artist or title present".format(info.filename))
 		return
