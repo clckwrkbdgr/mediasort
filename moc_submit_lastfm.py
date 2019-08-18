@@ -175,12 +175,20 @@ def convert_length(length):
 # Side-effect functions
 
 def still_playing(info):
-	p = subprocess.Popen(["bash", "-ic", "mocp -i"], stdout=subprocess.PIPE)
-	out, err = p.communicate()
-	lines = out.decode('utf-8').split("\n")
+	MAX_TRIES = 3
+	lines = None
+	for tries in range(MAX_TRIES):
+		p = subprocess.Popen(["bash", "-ic", "mocp -i"], stdout=subprocess.PIPE)
+		out, err = p.communicate()
+		lines = out.decode('utf-8').split("\n")
+		if lines == ['State: PLAY', '']: # Incomplete state info.
+			continue
+		break
 	if 'File: {0}'.format(info.filename) in lines:
 		return True
 	log('Cannot find filename "{0}" in moc info output'.format(info.filename))
+	for line in lines:
+		log('  mocp -i: {0}'.format(line))
 	for s in ["Artist: %s" % info.artist, "Album: %s" % info.album, "SongTitle: %s" % info.title]:
 		if not s in lines:
 			log(info.filename, ': <{0}> not in lines'.format(s))
@@ -218,6 +226,7 @@ def wait_until_song_is_half_played(info):
 	while True:
 		time.sleep(5)
 		if not still_playing(info):
+			log('Started at {0}, now is {1} and not playing anymore.'.format(start, datetime.datetime.now()))
 			return False
 		if (datetime.datetime.now() - start).seconds > wait:
 			return True
