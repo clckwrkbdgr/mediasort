@@ -231,7 +231,7 @@ def wait_until_song_is_half_played(info):
 		if (datetime.datetime.now() - start).seconds > wait:
 			return True
 
-def main():
+def run_submitter():
 	parser = optparse.OptionParser()
 	parser.add_option("-a", "--artist", dest="artist")
 	parser.add_option("-t", "--title", dest="title")
@@ -275,12 +275,15 @@ def main():
 	else:
 		exit(1)
 
+def main():
+	try:
+		run_submitter()
+	except Exception as e:
+		log(sys.argv, e)
+
 if __name__ == '__main__':
 	if len(sys.argv) > 1 and sys.argv[1] == "test":
 		del sys.argv[1]
 		unittest.main()
 
-	try:
-		main()
-	except Exception as e:
-		log(sys.argv, e)
+	main()
