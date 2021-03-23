@@ -145,8 +145,8 @@ def decode_tag(tag):
 	bytes_tag = None
 	try:
 		bytes_tag = tag.encode('latin-1')
-		if any(b > 127 for b in bytes_tag):
-			return tag # Safe to say that second page of successful latin-1 is available in utf-8.
+		if sum(1 for b in bytes_tag if b > 127) / float(len(tag)) < 0.3:
+			return tag # It's very likely that this is some latin-based codepage, like Western European.
 	except:
 		return tag
 	try:
