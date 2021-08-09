@@ -177,12 +177,15 @@ def convert_length(length):
 # Side-effect functions
 
 def still_playing(info):
-	MAX_TRIES = 3
+	MAX_TRIES = 5
 	lines = None
 	for tries in range(MAX_TRIES):
 		p = subprocess.Popen(["bash", "-ic", "mocp -i"], stdout=subprocess.PIPE)
 		out, err = p.communicate()
-		lines = out.decode('utf-8').split("\n")
+		out = out.decode('utf-8')
+		if not out.strip():
+			continue
+		lines = out.split("\n")
 		if lines == ['State: PLAY', '']: # Incomplete state info.
 			continue
 		break
