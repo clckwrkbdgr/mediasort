@@ -189,6 +189,8 @@ def still_playing(info):
 		if lines == ['State: PLAY', '']: # Incomplete state info.
 			continue
 		break
+	if 'State: STOP' in lines:
+		return False
 	if 'File: {0}'.format(info.filename) in lines:
 		return True
 	log('Cannot find filename "{0}" in moc info output'.format(info.filename))
